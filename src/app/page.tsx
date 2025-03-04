@@ -18,11 +18,13 @@ export default function Home() {
     setLoading(true);
     try {
       const data = await fetchCateringData(filters);
-      setPoints(data);
+      setPoints(data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
+      setPoints([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -30,10 +32,15 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="container mx-auto px-6">
-      <h1 className="text-2xl font-bold mb-4">Food Map Москвы</h1>
+    <div>
       <Filters onFilterChange={loadData} />
-      {loading ? <p>Загрузка...</p> : <Map points={points} />}
+      {loading ? (
+        <p>Загрузка данных...</p>
+      ) : points.length > 0 ? (
+        <Map points={points} />
+      ) : (
+        <p>Нет данных для отображения</p>
+      )}
     </div>
   );
 }
