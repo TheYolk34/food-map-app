@@ -12,32 +12,38 @@ export async function fetchCateringData(filters: FilterParams = {}): Promise<Cat
   const filterConditions: string[] = [];
 
   if (filters.operatingCompany) {
-    filterConditions.push(`substringof('${filters.operatingCompany}',Cells/OperatingCompany)`);
+    // Избегаем двойной кодировки, передаём значение напрямую
+    params.append('q', filters.operatingCompany); // Не используем encodeURIComponent здесь
   }
   if (filters.typeObject) {
-    // Используем точное совпадение вместо substringof
     filterConditions.push(`Cells/TypeObject eq '${filters.typeObject}'`);
   }
-  if (filters.isNetObject !== undefined) {
-    filterConditions.push(`Cells/IsNetObject eq ${filters.isNetObject}`);
+  if (filters.isNetObject === true) { // Добавляем только если true
+    filterConditions.push(`Cells/IsNetObject eq true`);
   }
 
   if (filterConditions.length > 0) {
     params.append('$filter', filterConditions.join(' and '));
   }
 
+  const requestUrl = `${BASE_URL}?${params.toString()}`;
+  console.log('Request URL:', requestUrl); // Логируем URL для диагностики
+
   try {
-    const response = await fetch(`${BASE_URL}?${params.toString()}`);
+    const response = await fetch(requestUrl);
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('API Error Response:', errorText); // Логируем текст ошибки
+      console.error('API Error Response:', errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    console.log('API Response:', data);
+    console.log('API Response Raw:', data);
 
-    if (Array.isArray(data)) {
-      return data.map((item: any) => ({
+    const items = Array.isArray(data) ? data : Array.isArray(data.Items) ? data.Items : [];
+    console.log('Processed OperatingCompany:', items.map((item: any) => item.Cells.OperatingCompany));
+
+    if (Array.isArray(items)) {
+      return items.map((item: { Cells: { ID: number; Name: string; OperatingCompany: string; TypeObject: string; Address: string; SeatsCount: number; IsNetObject: boolean; geoData: { coordinates: number[] } } }) => ({
         id: item.Cells.ID,
         Name: item.Cells.Name,
         OperatingCompany: item.Cells.OperatingCompany,
@@ -50,7 +56,7 @@ export async function fetchCateringData(filters: FilterParams = {}): Promise<Cat
         },
       }));
     } else {
-      console.error('API returned non-array data:', data);
+      console.error('API returned non-array data or no Items:', data);
       return [];
     }
   } catch (error) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { LatLngTuple, divIcon, Marker as LeafletMarker } from 'leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 import 'leaflet/dist/leaflet.css';
@@ -12,7 +12,6 @@ interface MapProps {
   points: CateringPoint[];
 }
 
-// Кастомная иконка для маркеров заведений с использованием divIcon
 const customIcon = (point: CateringPoint) =>
   divIcon({
     html: `
@@ -20,25 +19,26 @@ const customIcon = (point: CateringPoint) =>
         <img src="/icons/restaurant.png" alt="${point.Name}" class="w-full h-full object-contain" />
       </div>
     `,
-    className: '', // Убираем стандартные стили Leaflet
-    iconSize: [40, 40], // Размер иконки
-    iconAnchor: [20, 40], // Точка привязки (центр снизу)
+    className: '',
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
   });
 
 export default function Map({ points }: MapProps) {
   const [isMounted, setIsMounted] = useState(false);
-  const center: LatLngTuple = [55.751244, 37.618423];
+  const map = useMap();
 
   useEffect(() => {
     setIsMounted(true);
     return () => setIsMounted(false);
   }, []);
 
+  console.log('Map received points:', points); // Отладка
+
   if (!isMounted) {
     return <div>Загрузка карты...</div>;
   }
 
-  // Функция для создания кастомной иконки кластера
   const clusterIconCreateFunction = (cluster: any) => {
     const childCount = cluster.getChildCount();
     const size = childCount < 10 ? 40 : childCount < 100 ? 48 : 56;
@@ -51,11 +51,7 @@ export default function Map({ points }: MapProps) {
   };
 
   return (
-    <MapContainer
-      center={center}
-      zoom={10}
-      style={{ height: '600px', width: '100%' }}
-    >
+    <>
       <TileLayer
         attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -66,37 +62,40 @@ export default function Map({ points }: MapProps) {
         maxClusterRadius={50}
       >
         {points && points.length > 0 ? (
-          points.map((point) => (
-            <Marker
-              key={point.id}
-              position={point.geoData.coordinates}
-              icon={customIcon(point)} // Используем divIcon для полной области
-              eventHandlers={{
-                mouseover: (e) => {
-                  const marker = e.target as LeafletMarker;
-                  marker.openPopup();
-                },
-                mouseout: (e) => {
-                  const marker = e.target as LeafletMarker;
-                  marker.closePopup();
-                },
-              }}
-            >
-              <Popup>
-                <div className="space-y-1">
-                  <h3 className="font-bold">{point.Name}</h3>
-                  <p>Компания: {point.OperatingCompany}</p>
-                  <p>Тип: {point.TypeObject}</p>
-                  <p>Адрес: {point.Address}</p>
-                  <p>Мест: {point.SeatsCount}</p>
-                </div>
-              </Popup>
-            </Marker>
-          ))
+          points.map((point) => {
+            console.log('Rendering point:', point); // Отладка рендеринга
+            return (
+              <Marker
+                key={point.id}
+                position={point.geoData.coordinates}
+                icon={customIcon(point)}
+                eventHandlers={{
+                  mouseover: (e) => {
+                    const marker = e.target as LeafletMarker;
+                    marker.openPopup();
+                  },
+                  mouseout: (e) => {
+                    const marker = e.target as LeafletMarker;
+                    marker.closePopup();
+                  },
+                }}
+              >
+                <Popup>
+                  <div className="space-y-1">
+                    <h3 className="font-bold">{point.Name}</h3>
+                    <p>Компания: {point.OperatingCompany}</p>
+                    <p>Тип: {point.TypeObject}</p>
+                    <p>Адрес: {point.Address}</p>
+                    <p>Мест: {point.SeatsCount}</p>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })
         ) : (
           <div>Нет данных для отображения</div>
         )}
       </MarkerClusterGroup>
-    </MapContainer>
+    </>
   );
 }
