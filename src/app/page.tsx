@@ -18,7 +18,7 @@ export default function Home() {
     setLoading(true);
     try {
       const data = await fetchCateringData(filters);
-      setPoints(data || []);
+      setPoints(data);
     } catch (error) {
       console.error('Error fetching data:', error);
       setPoints([]);
@@ -28,7 +28,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    loadData();
+    loadData(); // Загружаем все данные при первой загрузке
   }, []);
 
   return (

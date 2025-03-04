@@ -9,31 +9,52 @@ export async function fetchCateringData(filters: FilterParams = {}): Promise<Cat
     api_key: API_KEY,
   });
 
+  const filterConditions: string[] = [];
+
   if (filters.operatingCompany) {
-    params.append('$filter', `substringof('${filters.operatingCompany}',Cells/OperatingCompany)`);
+    filterConditions.push(`substringof('${filters.operatingCompany}',Cells/OperatingCompany)`);
   }
   if (filters.typeObject) {
-    params.append('$filter', `substringof('${filters.typeObject}',Cells/TypeObject)`);
+    // Используем точное совпадение вместо substringof
+    filterConditions.push(`Cells/TypeObject eq '${filters.typeObject}'`);
   }
   if (filters.isNetObject !== undefined) {
-    params.append('$filter', `Cells/IsNetObject eq '${filters.isNetObject ? 'да' : 'нет'}'`);
+    filterConditions.push(`Cells/IsNetObject eq ${filters.isNetObject}`);
   }
 
-  const response = await fetch(`${BASE_URL}?${params.toString()}`);
-  const data = await response.json();
-  return data.map((item: any) => ({
-    id: item.Cells.ID,
-    Name: item.Cells.Name,
-    OperatingCompany: item.Cells.OperatingCompany,
-    TypeObject: item.Cells.TypeObject,
-    Address: item.Cells.Address,
-    SeatsCount: item.Cells.SeatsCount,
-    IsNetObject: item.Cells.IsNetObject,
-    geoData: {
-      coordinates: [
-        item.Cells.geoData.coordinates[1], // lat
-        item.Cells.geoData.coordinates[0]  // lng
-      ]
+  if (filterConditions.length > 0) {
+    params.append('$filter', filterConditions.join(' and '));
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}?${params.toString()}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error Response:', errorText); // Логируем текст ошибки
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  }));
+    const data = await response.json();
+    console.log('API Response:', data);
+
+    if (Array.isArray(data)) {
+      return data.map((item: any) => ({
+        id: item.Cells.ID,
+        Name: item.Cells.Name,
+        OperatingCompany: item.Cells.OperatingCompany,
+        TypeObject: item.Cells.TypeObject,
+        Address: item.Cells.Address,
+        SeatsCount: item.Cells.SeatsCount,
+        IsNetObject: item.Cells.IsNetObject,
+        geoData: {
+          coordinates: [item.Cells.geoData.coordinates[1], item.Cells.geoData.coordinates[0]],
+        },
+      }));
+    } else {
+      console.error('API returned non-array data:', data);
+      return [];
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return [];
+  }
 }

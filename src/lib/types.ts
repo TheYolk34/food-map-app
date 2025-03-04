@@ -5,7 +5,7 @@ export interface CateringPoint {
     TypeObject: string;
     Address: string;
     SeatsCount: number;
-    IsNetObject: string; // "да" или "нет"
+    IsNetObject: boolean;
     geoData: {
       coordinates: [number, number];
     };

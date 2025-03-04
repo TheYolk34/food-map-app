@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button'; // Убедитесь, что путь правильный
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -17,6 +17,7 @@ export default function Filters({ onFilterChange }: FiltersProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Applying filters:', filters); // Для отладки
     onFilterChange(filters);
   };
 
@@ -31,14 +32,17 @@ export default function Filters({ onFilterChange }: FiltersProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             placeholder="Название компании"
+            value={filters.operatingCompany || ''}
             onChange={(e) => setFilters({ ...filters, operatingCompany: e.target.value })}
           />
           <Input
             placeholder="Тип объекта"
+            value={filters.typeObject || ''}
             onChange={(e) => setFilters({ ...filters, typeObject: e.target.value })}
           />
           <div className="flex items-center space-x-2">
             <Switch
+              checked={filters.isNetObject || false}
               onCheckedChange={(checked) => setFilters({ ...filters, isNetObject: checked })}
             />
             <span>Сетевое заведение</span>
