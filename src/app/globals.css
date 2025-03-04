@@ -116,6 +116,30 @@
   --sidebar-ring: oklch(0.439 0 0);
 }
 
+/* src/styles/globals.css */
+.marker-cluster {
+  background-color: hsl(var(--primary));
+  border-radius: 50%;
+  color: hsl(var(--primary-foreground));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.marker-cluster-small {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+.marker-cluster-medium {
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+.marker-cluster-large {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

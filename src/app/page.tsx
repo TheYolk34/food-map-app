@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Map from './components/Map';
+import dynamic from 'next/dynamic';
 import Filters from './components/Filters';
 import { fetchCateringData } from '@/lib/api';
 import { CateringPoint, FilterParams } from '@/lib/types';
+
+const Map = dynamic(() => import('./components/Map'), {
+  ssr: false,
+});
 
 export default function Home() {
   const [points, setPoints] = useState<CateringPoint[]>([]);
@@ -26,14 +30,10 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto px-6">
       <h1 className="text-2xl font-bold mb-4">Food Map Москвы</h1>
       <Filters onFilterChange={loadData} />
-      {loading ? (
-        <p>Загрузка...</p>
-      ) : (
-        <Map points={points} />
-      )}
+      {loading ? <p>Загрузка...</p> : <Map points={points} />}
     </div>
   );
 }
